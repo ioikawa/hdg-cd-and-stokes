@@ -1,0 +1,30 @@
+include "common.idp"
+macro Div(u) (dx(u[0])+dy(u[1]))//
+macro eta() (16/lenEdge)//
+macro u() [u1,u2]//
+macro l() [l1,l2]//
+macro v() [v1,v2]//
+macro m() [m1,m2]//
+int n = 16;
+mesh Th=buildmesh(G1(n)+G2(n)+G3(n)+G4(n));
+func f = [0,0];
+fespace V(Th,[P1dc,P1dc,P0,P1edge,P1edge]);
+V [u1,u2,p,l1,l2], [v1,v2,q,m1,m2];
+solve HDGStokes
+([u1,u2,p,l1,l2],[v1,v2,q,m1,m2])
+= int2d(Th)(Grad(u1)'*Grad(v1)
+  + Grad(u2)'*Grad(v2))
++ intfa(Th)(
+  [Grad(u1)'*nr, Grad(u2)'*nr]'*(m-v)
+  + [Grad(v1)'*nr, Grad(v2)'*nr]'*(l-u)
++ eta*(l-u)'*(m-v))
+- int2d(Th)(Div(v)*p)
+- intfa(Th)((m-v)'*nr*p)
+- int2d(Th)(Div(u)*q)
+- intfa(Th)((l-u)'*nr*q)
+- int2d(Th)(f'*v)
++ on(1,2,4,l1=0) + on(3,l1=1)
++ on(1,2,3,4,l2=0);
+//Visualization
+plot(u,wait=1,value=1);
+plot(p,dim=2,fill=1,wait=1,value=1);
