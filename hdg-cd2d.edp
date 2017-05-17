@@ -1,0 +1,24 @@
+include "common.idp"
+macro eta() (8/lenEdge)//
+macro bn() (b'*nr)//
+int n = 12;
+mesh Th=buildmesh(G1(n)+G2(n)+G3(n)+G4(n));
+real eps=1e-3; // Diffusion coefficient
+func b = [1,0]; // Convection
+func f = 1;
+fespace V(Th,[P1dc,P1edge]);
+V [u,l], [v,m];
+solve UpwindHDG([u,l],[v,m])
+ // Diffusion
+ = int2d(Th)(eps*Grad(u)'*Grad(v))
+ + intfa(Th)(eps*NGrad(v)*(l-u)
+ + eps*NGrad(u)*(m-v)
+ + eps*eta*(l-u)*(m-v))
+ // Convection
+ - int2d(Th)(u*b'*Grad(v))
+ + intfa(Th)(bn*((bn<0)*l+(bn>=0)*u)*(v-m))
+ - int2d(Th)(f*v)
+ + on(1,2,3,4,l=0);
+// Visualization
+plot(u,dim=3,fill=1,wait=1,value=1);
+plot(l,dim=3,fill=1,wait=1,value=1);
